@@ -10,7 +10,6 @@ class ExcitationFunction:
     sigma: np.ndarray
     sigma_error: np.ndarray
 
-
 @dataclass
 class ExcitationFunctionModel:
     experimental_data: ExcitationFunction
@@ -39,6 +38,25 @@ class ExcitationFunctionModel:
 
         return self.weight * outside_bracket * (bracket_term1 + bracket_term2)
 
+@dataclass
+class BarrierDistribution:
+    E_bd: np.ndarray
+    D_fus: np.ndarray
+    D_fus_err: np.ndarray
+
+    @staticmethod
+    def get_BD_from_xs(E, sigma, sigma_err):
+        Esigma = E*sigma
+
+        fbd = np.empty(len(E)-2)
+        fbd_err = np.empty((len(E)-2))
+        Ebd = E[1:-1]
+
+        for i in range(1,len(E)-1):
+            fbd[i-1] = 2/(E[i+1]-E[i-1])*((Esigma[i+1]-Esigma[i])/(E[i+1]-E[i])-(Esigma[i]-Esigma[i-1])/(E[i]-E[i-1]))
+            fbd_err[i-1] = Ebd[i-1]/(E[i+1]-E[i-1])**2*np.sqrt(sigma_err[i+1]**2+4*sigma_err[i]**2+sigma_err[i-1]**2)
+        
+        return Ebd, fbd, fbd_err
 
 # def expression_bd(E_bd, weight, Vg, Wg):
 
@@ -50,18 +68,6 @@ class ExcitationFunctionModel:
 #   coeff = weight/(np.sqrt(2*np.pi)*Wg)
 
 #   return coeff*bracket_term
-
-# def expression_xs(E_cm, weight, Vg, Wg):
-#     # calculating Z
-#     Z = get_Z(E_cm, Vg, Wg)
-
-#     # calculating terms for the cross-section
-#     bracket_term1 = np.sqrt(np.pi) * Z * erfc(-Z)
-#     bracket_term2 = np.exp(-Z * Z)
-#     outside_bracket = weight * Wg / np.sqrt(2 * np.pi) / E_cm
-
-#     return outside_bracket * (bracket_term1 + bracket_term2)
-
 
 # def get_chi2(x, y_expt, y_err, y_model):
 #     return np.sum((y_expt - y_model) ** 2 / y_err**2) / len(x)

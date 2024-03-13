@@ -14,11 +14,10 @@ class ExcitationFunction:
 @dataclass
 class ExcitationFunctionModel:
     experimental_data: ExcitationFunction
-    num_gauss: np.ndarray
-    weight: np.ndarray
-    Vg: np.ndarray
-    Wg: np.ndarray
-    Rg: np.ndarray
+    weight: float
+    Vg: float
+    Wg: float
+    Rg: float
 
     @staticmethod
     def get_Z(E_cm: np.ndarray, Vg: float, Wg: float) -> np.ndarray:

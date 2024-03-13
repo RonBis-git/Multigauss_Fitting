@@ -3,38 +3,46 @@ from scipy.special import erfc
 
 from dataclasses import dataclass
 
+
 @dataclass
 class ExcitationFunction:
     E_cm: np.ndarray
     sigma: np.ndarray
     sigma_error: np.ndarray
 
-# @dataclass
-# class ExcitationFunctionModel:
-#     experimental_data: ExcitationFunction
-#     num_gauss: np.ndarray
-#     weight: np.ndarray
-#     Vg: np.ndarray
-#     Wg: np.ndarray
-#     Rg: np.ndarray
 
-#     @staticmethod
-#     def get_Z(E_cm: np.ndarray, Vg: float, Wg: float) -> np.ndarray:
-#         return (E_cm - Vg) / np.sqrt(2.0) / Wg
-    
-#     def expression_xs(E_cm, weight, Vg, Wg):
-#     # calculating Z
-#     Z = get_Z(E_cm, Vg, Wg)
+@dataclass
+class ExcitationFunctionModel:
+    experimental_data: ExcitationFunction
+    num_gauss: np.ndarray
+    weight: np.ndarray
+    Vg: np.ndarray
+    Wg: np.ndarray
+    Rg: np.ndarray
 
-#     # calculating terms for the cross-section
-#     bracket_term1 = np.sqrt(np.pi) * Z * erfc(-Z)
-#     bracket_term2 = np.exp(-Z * Z)
-#     outside_bracket = weight * Wg / np.sqrt(2 * np.pi) / E_cm
+    @staticmethod
+    def get_Z(E_cm: np.ndarray, Vg: float, Wg: float) -> np.ndarray:
+        return (E_cm - Vg) / np.sqrt(2.0) / Wg
 
-#     return outside_bracket * (bracket_term1 + bracket_term2)
+    def expression_xs(self):
+        # calculating Z
+        Z = ExcitationFunction.get_Z(self.experimental_data.E_cm, self.Vg, self.Wg)
+
+        # calculating terms for the cross-section
+        bracket_term1 = np.sqrt(np.pi) * Z * erfc(-Z)
+        bracket_term2 = np.exp(-Z * Z)
+        outside_bracket = (
+            np.pi
+            * self.Rg**2
+            * self.Wg
+            / (np.sqrt(2 * np.pi) * self.experimental_data.E_cm)
+        )
+
+        return self.weight * outside_bracket * (bracket_term1 + bracket_term2)
+
 
 # def expression_bd(E_bd, weight, Vg, Wg):
-  
+
 #   Z = get_Z(E_bd,Vg,Wg)
 
 #   # calculating terms for the barrier distribution

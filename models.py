@@ -13,15 +13,14 @@ class ExcitationFunction:
 
 @dataclass
 class ExcitationFunctionModel:
-    experimental_data: ExcitationFunction
     weight: float
     Vg: float
     Wg: float
     Rg: float
 
-    def expression_xs(self):
+    def expression_xs(self, E_cm):
         # calculating Z
-        Z = (self.experimental_data.E_cm - self.Vg) / (np.sqrt(2.0) * self.Wg)
+        Z = (E_cm - self.Vg) / (np.sqrt(2.0) * self.Wg)
 
         # calculating terms for the cross-section
         bracket_term1 = np.sqrt(np.pi) * Z * erfc(-Z)
@@ -30,7 +29,7 @@ class ExcitationFunctionModel:
             np.pi
             * self.Rg**2
             * self.Wg
-            / (np.sqrt(2 * np.pi) * self.experimental_data.E_cm)
+            / (np.sqrt(2 * np.pi) * E_cm)
         )
 
         return self.weight * outside_bracket * (bracket_term1 + bracket_term2)
@@ -74,14 +73,13 @@ class BarrierDistribution:
 
 @dataclass
 class BarrierDistributionModel:
-    experimental_data: BarrierDistribution
     weight: float
     Vg: float
     Wg: float
 
-    def expression_bd(self):
+    def expression_bd(self, E_bd):
 
-        Z = (self.experimental_data.E_bd - self.Vg) / (np.sqrt(2.0) * self.Wg)
+        Z = (E_bd - self.Vg) / (np.sqrt(2.0) * self.Wg)
 
         # calculating terms for the barrier distribution
         bracket_term = np.exp(-Z * Z)

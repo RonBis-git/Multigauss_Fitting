@@ -25,7 +25,9 @@ class ExcitationFunctionModel:
         # calculating terms for the cross-section
         bracket_term1 = np.sqrt(np.pi) * Z * erfc(-Z)
         bracket_term2 = np.exp(-Z * Z)
-        outside_bracket = np.pi * self.Rg**2 * self.Wg / (np.sqrt(2 * np.pi) * E_cm)
+        outside_bracket = (
+            10 * np.pi * self.Rg**2 * self.Wg / (np.sqrt(2 * np.pi) * E_cm)
+        )
 
         return self.weight * outside_bracket * (bracket_term1 + bracket_term2)
 

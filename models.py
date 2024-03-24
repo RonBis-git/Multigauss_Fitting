@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.special import erfc
 
-def expression_xs(weight, Vg, Wg, Rg, E_cm):
+def cross_section_model(weight, Vg, Wg, Rg, E_cm):
     # calculating Z
     Z = (E_cm - Vg) / (np.sqrt(2.0) * Wg)
 
@@ -40,7 +40,7 @@ def get_BD_from_xs(E, sigma, sigma_err):
     return Ebd, fbd, fbd_err
 
 
-def expression_bd(weight, Vg, Wg, E_bd):
+def barrier_distribution_model(weight, Vg, Wg, E_bd):
 
     Z = (E_bd - Vg) / (np.sqrt(2.0) * Wg)
 

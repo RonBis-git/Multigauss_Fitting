@@ -205,5 +205,6 @@ def optimize_cross_section(x, y, y_err, max_num_gauss=5):
     
     opt_num_gauss = num_gauss[np.argmin(chi_2)]
     print(f'Optimum number of gaussians = {opt_num_gauss}')
+    print(f'Optimum parameter values: {full_result[opt_num_gauss]}')
 
 

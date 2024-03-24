@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.optimize import curve_fit
 
+import pandas as pd
+
 import matplotlib.pyplot as plt
 
 import models
@@ -14,9 +16,9 @@ def get_chi0_2(x, y_expt, y_err, y_model):
 def get_init_params_cross_section(N):
     """Function to randomly generate initial guesses of parameters within a given range for N gaussians"""
 
-    Vg = np.random.default_rng().uniform(50, 100, size=N)
-    Wg = np.random.default_rng().uniform(0, 5, size=N)
-    R0 = np.random.default_rng().uniform(0, 3, size=1)
+    Vg = np.random.default_rng().uniform(20, 100, size=N)
+    Wg = np.random.default_rng().uniform(1, 5, size=N)
+    R0 = np.random.default_rng().uniform(7, 15, size=1)
     weight = 1 / N * np.ones(N)
 
     return np.hstack((weight, Vg, Wg, R0))  # Stack(concatenate) into a single array
@@ -61,7 +63,7 @@ def get_parameter_bounds_cross_section(num_gauss: int):
         (weight_upper_bound, Vg_upper_bound, Wg_upper_bound, R0_upper_bound)
     )  # stacking them into a single array
 
-    return (lower_bounds, upper_bounds)
+    return lower_bounds, upper_bounds
 
 
 def get_y_model_cross_section(E_cm: np.ndarray, *params: np.ndarray) -> np.ndarray:
@@ -145,32 +147,63 @@ def get_y_model_cross_section(E_cm: np.ndarray, *params: np.ndarray) -> np.ndarr
 def optimize_cross_section(x, y, y_err, max_num_gauss=5):
     """Function to run the optimisation for fusion cross section."""
 
+    full_result = {}
+
     # Array conataining number of gaussians in the model.
     # Currently num_gauss = [1,2,3,4,5]
     num_gauss = np.arange(1, max_num_gauss + 1)
 
     # Array to contain chi_0_sq values for each N gaussians
     chi_0_2 = np.empty(max_num_gauss, dtype=float)
+    chi_2 = np.empty(max_num_gauss, dtype=float)
 
     for ng in num_gauss:
+
+        lower_bounds, upper_bounds = get_parameter_bounds_cross_section(ng)
+        init_params = get_init_params_cross_section(ng)
 
         popt, pcov = curve_fit(
             get_y_model_cross_section,
             x,
             y,
-            p0=list(get_init_params_cross_section(ng)),  # Converting numpy array to python list
+            p0=init_params,  # Converting numpy array to python list
             sigma=y_err,
-            bounds=get_parameter_bounds_cross_section(ng),
+            bounds=(lower_bounds, upper_bounds),
         )
-        print(popt)
-        chi_0_2[ng - 1] = get_chi0_2(x, y, y_err, get_y_model_cross_section(x, *popt))
+        # print(popt)
+
+        y_model = get_y_model_cross_section(x, *popt)
+        _, weight_opt, Vg_opt, Wg_opt, R0_opt = unpack_params_cross_section(popt)
+
+        chi_0_2[ng - 1] = get_chi0_2(x, y, y_err, y_model)
+        chi_2[ng - 1] = len(y) * chi_0_2[ng - 1] / (len(y) - (3 * ng + 1))
+
+        full_result[ng] = {
+            "chi_0_2": chi_0_2[ng - 1],
+            "chi_2": chi_2[ng - 1],
+            "weight": weight_opt,
+            "Vg": Vg_opt,
+            "Wg": Wg_opt,
+            "R0": R0_opt,
+            "y_model": y_model,
+        }
+
         # print(f"y_model = {get_y_model(x,*popt)}")
-        print(chi_0_2[ng - 1])
+        # print(chi_0_2[ng - 1])
 
     print(num_gauss, chi_0_2)
-    chi_2 = len(y) * chi_0_2 / (len(y) - (3 * num_gauss + 1))
     plt.plot(num_gauss, chi_0_2, label="chi_0_sq")
     plt.plot(num_gauss, chi_2, label="chi_sq")
     plt.legend()
     plt.xlabel("No. of gaussians")
     plt.show()
+
+    df = pd.DataFrame.from_dict(full_result, orient='index')
+
+    # Save the DataFrame as an Excel file
+    df.to_csv('results.csv', index_label='N')
+    
+    opt_num_gauss = num_gauss[np.argmin(chi_2)]
+    print(f'Optimum number of gaussians = {opt_num_gauss}')
+
+

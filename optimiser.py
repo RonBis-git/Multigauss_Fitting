@@ -198,13 +198,23 @@ def optimize_cross_section(x, y, y_err, max_num_gauss=5):
     plt.xlabel("No. of gaussians")
     plt.show()
 
-    df = pd.DataFrame.from_dict(full_result, orient='index')
+    df = pd.DataFrame.from_dict(full_result, orient="index")
 
     # Save the DataFrame as an Excel file
-    df.to_csv('results.csv', index_label='N')
-    
+    df.to_csv("results.csv", index_label="N")
+
     opt_num_gauss = num_gauss[np.argmin(chi_2)]
-    print(f'Optimum number of gaussians = {opt_num_gauss}')
-    print(f'Optimum parameter values: {full_result[opt_num_gauss]}')
+    print(f"Optimum number of gaussians = {opt_num_gauss}")
+    print("Optimum parameter values:")
 
-
+    for key, value in full_result[opt_num_gauss].items():
+        if key != "y_model":
+            print(f"{key}={value}")
+        else:
+            np.savetxt(
+                "cs_data.dat",
+                np.column_stack((x, value)),
+                fmt=("%.3f", "%.3e"),
+                delimiter="\t",
+            )
+            print('The model cross sections are stored in cs_data.dat')
